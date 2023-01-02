@@ -22,3 +22,68 @@ var beatles=[{
   profilePic:"http://cp91279.biography.com/BIO_Bio-Shorts_0_Ringo-Starr_SF_HD_768x432-16x9.jpg"
 }
 ]
+
+const port = 3001;
+const host = 'localhost'
+
+http.createServer((req, res) => {
+  console.log("Server iniciado")
+  let url = req.url
+  console.log(url)
+
+  if(url === '/'){
+    const index = fs.readFileSync('./index.html', 'utf-8')
+    res.writeHead(200, {'Content-type': 'text/html'})
+    res.end(index)
+    return
+  }
+  
+
+  if(req.url === '/api'){
+    res.writeHead(200, {'Content-type': 'text/json'});
+    res.end(JSON.stringify(beatles))
+    return;
+  }
+
+  let name = url
+                .split('/')
+                .pop()
+                .replace('%20', ' ')
+
+  console.log(name)
+
+  if(url.includes('/api') && name){
+    const beatle = beatles.filter(n => n.name === name)
+    
+    if(!beatle.length) return res.writeHead(404).end("Beatle no encontrado")
+
+    res.writeHead(200, {'Content-type': 'text/json'})
+    res.end(JSON.stringify(beatle))
+    return
+    
+  }
+
+  let nameBeatles = url.split('/').pop().replace('%20', ' ')
+
+  console.log(nameBeatles)
+
+  if(url.includes('/') && nameBeatles){
+    const searchBeatle = beatles.filter(b => b.name === nameBeatles);
+    console.log(searchBeatle)
+    let html = fs.readFileSync('./beatle.html', 'utf-8');
+    html = html.replace('{name}', searchBeatle[0].name);
+    html = html.replace('{birthday}', searchBeatle[0].birthdate)
+    html = html.replace('{image}', searchBeatle[0].profilePic)
+    
+    res.writeHead(200, {'Content-type': 'text/html'})
+    res.end(html)
+    return
+  }
+
+  
+  res.writeHead(200, {'Content-type': 'text/json'})
+  res.end(JSON.stringify({error: 'Pagina no encontrada'}))
+  
+
+
+}).listen(port, host)
